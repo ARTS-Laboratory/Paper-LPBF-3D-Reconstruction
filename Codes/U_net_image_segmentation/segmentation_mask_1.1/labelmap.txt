@@ -1,0 +1,16 @@
+# label:color_rgb:parts:actions
+background:0,0,0::
+cube:255,96,55::
+cube_0.6mm:39,13,9::
+cube_0.8mm:99,194,10::
+cube_1mm:39,26,184::
+thin_wall:61,61,245::
+wall_0.2mm:18,146,145::
+wall_0.3mm:24,210,54::
+wall_0.4mm:28,53,40::
+wall_0.5mm:5,153,39::
+wall_0.6mm:215,43,192::
+wall_0.7mm:11,116,20::
+wall_0.8mm:239,178,145::
+wall_0.9mm:98,126,125::
+wall_1mm:94,81,55::
