@@ -1,0 +1,12 @@
+Mean wall shift across the image sequence
+Shift definition: Incremental displacement from the immediately preceding frame
+Images processed: 40
+Possible consecutive transitions: 39
+First image excluded: it has no preceding image (zero is only a plotting baseline).
+Finite shift measurements: 36
+Automatically accepted (status OK): 35
+Mean signed shift (mm): +0.00287698
+Mean absolute shift (mm): 0.03422619
+Signed means can cancel positive and negative shifts.
+Absolute means measure average shift magnitude, regardless of direction.
+Review status is an automatic flag, not independent physical validation.

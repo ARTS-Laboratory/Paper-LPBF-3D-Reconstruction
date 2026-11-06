@@ -1,7 +1,0 @@
-Nominal wall width 1 mm; nominal wall length 40.0 mm
-Blue line slope dx/dy: -0.339355; gap: 81.000 px
-Width scale: 0.01234568 mm/px
-Length 40mm not independently calibrated. Camera registration must be verified.
-Tracking uses straightened (deskewed) image coordinates.
-Frames: 40; tracked: 38
-Filename numbering is sorted; missing captures may make layers nonconsecutive.
