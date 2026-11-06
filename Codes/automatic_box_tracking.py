@@ -21,11 +21,17 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-ROOT = Path(__file__).resolve().parent
-REFERENCE = ROOT / 'reference_0.4mm.png'
-OUTPUT = ROOT / 'automatic_box_tracking_outputs_0.4mm'
+#ROOT = Path(__file__).resolve().parent
+ROOT = Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Test_01\processed")
+REFERENCE = Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Codes\Thin_wall_drift_tracking\Edge_tracking_output_0.8mm\reference_0.8mm.png")
+OUTPUT = Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Codes\Thin_wall_drift_tracking\Edge_tracking_output_0.8mm")
 OUTPUT.mkdir(exist_ok=True)
-NOMINAL_WIDTH_MM = 0.4
+IMAGES= Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Test_01\processed")
+#OUTPUT.mkdir(exist_ok=True)
+#REFERENCE = ROOT / 'reference_0.4mm.png'
+#OUTPUT = ROOT / 'automatic_box_tracking_outputs_0.4mm'
+#OUTPUT.mkdir(exist_ok=True)
+NOMINAL_WIDTH_MM = 0.8
 NOMINAL_LENGTH_MM = 40.0
 EXPECTED_LAYER_COUNT = 40
 BLUR_KERNEL = 5
@@ -206,7 +212,7 @@ def main():
     if len(layers)!=EXPECTED_LAYER_COUNT:print('WARNING: Expected 40 images; processing all found images.')
     _,ref_bgr=read_image(REFERENCE)
     geom=reference_geometry(ref_bgr)
-    print('Reference:',geom)
+    print('IMAGES:',geom)
     cv2.imwrite(str(OUTPUT/'reference_deskewed.png'),deskew(ref_bgr,geom))
     mm_per_px=NOMINAL_WIDTH_MM/geom['width_px']
     print(f'Horizontal scale: {mm_per_px:.6f} mm/pixel (0.2 mm nominal width / {geom["width_px"]:.2f} pixels)')
