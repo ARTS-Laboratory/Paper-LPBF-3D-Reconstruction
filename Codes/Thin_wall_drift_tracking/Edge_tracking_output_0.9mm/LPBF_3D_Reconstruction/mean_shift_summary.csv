@@ -1,0 +1,3 @@
+category,number_of_shifts,possible_shifts,mean_signed_shift_mm,mean_absolute_shift_mm,definition
+all_finite,39,39,0.00923076923076923,0.06523076923076923,Incremental displacement from the immediately preceding frame
+automatically_accepted,35,39,0.009257142857142856,0.0528,Incremental displacement from the immediately preceding frame
