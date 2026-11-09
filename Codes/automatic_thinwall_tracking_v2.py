@@ -206,6 +206,93 @@ def chart(x,y,name,ylabel,reference=None):
     ax.grid(alpha=.3);fig.tight_layout();fig.savefig(OUTPUT/name,dpi=250);plt.close(fig)
 
 
+
+def save_mean_shift_summary(rows, total_frames, shift_key, definition):
+    """Summarize shifts, excluding the first frame's artificial zero baseline.
+
+    Includes all finite shifts and separately the automatically accepted ('OK')
+    shifts, so suspicious results cannot silently influence the validated mean.
+    """
+    transition_count = max(total_frames - 1, 0)
+    data = []
+    accepted = []
+    for row in rows:
+        if row.get('layer', 0) <= 1:
+            continue
+        value = row.get(shift_key, float('nan'))
+        try:
+            value = float(value)
+        except (ValueError, TypeError):
+            continue
+        if not np.isfinite(value):
+            continue
+        data.append(value)
+        if row.get('status') == 'OK':
+            accepted.append(value)
+
+    def stats(values):
+        values = np.asarray(values, dtype=float)
+        if values.size == 0:
+            return float('nan'), float('nan')
+        return float(np.mean(values)), float(np.mean(np.abs(values)))
+
+    raw_signed, raw_absolute = stats(data)
+    accepted_signed, accepted_absolute = stats(accepted)
+
+    text_lines = [
+        'Mean wall shift across the image sequence',
+        f'Shift definition: {definition}',
+        f'Images processed: {total_frames}',
+        f'Possible consecutive transitions: {transition_count}',
+        'First image excluded: it has no preceding image (zero is only a plotting baseline).',
+        f'Finite shift measurements: {len(data)}',
+        f'Automatically accepted (status OK): {len(accepted)}',
+        f'Mean signed shift (mm): {raw_signed:+.8f}',
+        f'Mean absolute shift (mm): {raw_absolute:.8f}',
+        #f'Mean signed shift, accepted only (mm): {accepted_signed:+.8f}',
+        #f'Mean absolute shift, accepted only (mm): {accepted_absolute:.8f}',
+        'Signed means can cancel positive and negative shifts.',
+        'Absolute means measure average shift magnitude, regardless of direction.',
+        'Review status is an automatic flag, not independent physical validation.',
+    ]
+    (OUTPUT / 'mean_shift_summary.txt').write_text('\n'.join(text_lines) + '\n', encoding='utf-8')
+
+    records = [
+        ('all_finite', len(data), raw_signed, raw_absolute),
+        ('automatically_accepted', len(accepted), accepted_signed, accepted_absolute),
+    ]
+    with (OUTPUT / 'mean_shift_summary.csv').open('w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(['category', 'number_of_shifts', 'possible_shifts',
+                         'mean_signed_shift_mm', 'mean_absolute_shift_mm', 'definition'])
+        for label, count, mean_signed, mean_abs in records:
+            writer.writerow([label, count, transition_count, mean_signed, mean_abs, definition])
+
+    fig, ax = plt.subplots(figsize=(8.5, 5.0))
+    x = np.arange(2)
+    width = 0.35
+    a = [raw_signed, accepted_signed]
+    b = [raw_absolute, accepted_absolute]
+    ax.bar(x - width/2, a, width, label='Mean signed shift')
+    ax.bar(x + width/2, b, width, label='Mean absolute shift')
+    ax.axhline(0, color='gray', lw=0.9)
+    ax.set_xticks(x, [f'All finite\n(n={len(data)})',
+                      f'Automatically accepted\n(n={len(accepted)})'])
+    ax.set_ylabel('Average shift (mm)')
+    ax.set_title(f'Mean wall shift across {total_frames} frames\n{definition}')
+    ax.legend()
+    ax.grid(axis='y', alpha=0.25)
+    fig.tight_layout()
+    #fig.savefig(OUTPUT / 'mean_shift_summary.png', dpi=250)
+    plt.close(fig)
+
+    print(f'\nMean-shift summary ({definition}; {total_frames} frames):')
+    print(f'  All finite: n={len(data)}/{transition_count}; '
+          f'signed={raw_signed:+.6f} mm; absolute={raw_absolute:.6f} mm')
+    print(f'  Automatically accepted: n={len(accepted)}/{transition_count}; '
+          f'signed={accepted_signed:+.6f} mm; absolute={accepted_absolute:.6f} mm')
+    return text_lines
+
 def main():
     layers=discover_layers()
     print(f'Found {len(layers)} layers: {layers[0].name} through {layers[-1].name}')
@@ -292,16 +379,19 @@ def main():
               'shift_vs_layer_px.png','Incremental shift: current minus previous layer (pixels)',0)
         chart(ix,[r.get('detected_width_mm',float('nan')) for r in rows],
               'detected_width_vs_layer_mm.png','Detected wall width (mm)',NOMINAL_WIDTH_MM)
-    with (OUTPUT/'automatic_tracking_summary.txt').open('w',encoding='utf8') as f:
-        f.write(f'Nominal wall width {NOMINAL_WIDTH_MM} mm; nominal wall length {NOMINAL_LENGTH_MM} mm\n')
-        f.write(f'Blue line slope dx/dy: {geom["slope"]:.6f}; gap: {geom["width_px"]:.3f} px\n')
-        f.write(f'Width scale: {mm_per_px:.8f} mm/px\n')
-        f.write('Length 40mm not independently calibrated. Camera registration must be verified.\n')
-        f.write('Tracking uses straightened (deskewed) image coordinates.\n')
-        f.write('Reported shift is (center of image i - center of image i-1) x mm/px.\n')
-        f.write('Image 1 shift is set to zero as a baseline; failed adjacent images produce NaN.\n')
-        f.write(f'Frames: {len(layers)}; tracked: {len(good)}\n')
-        f.write('Filename numbering is sorted; missing captures may make layers nonconsecutive.\n')
+    mean_lines = save_mean_shift_summary(rows, len(layers), 'shift_from_previous_layer_mm',
+                                         'Incremental displacement from the immediately preceding frame')
+    #with (OUTPUT/'automatic_tracking_summary.txt').open('w',encoding='utf8') as f:
+    #    f.write(f'Nominal wall width {NOMINAL_WIDTH_MM} mm; nominal wall length {NOMINAL_LENGTH_MM} mm\n')
+    #    f.write(f'Blue line slope dx/dy: {geom["slope"]:.6f}; gap: {geom["width_px"]:.3f} px\n')
+    #    f.write(f'Width scale: {mm_per_px:.8f} mm/px\n')
+    #    f.write('Length 40mm not independently calibrated. Camera registration must be verified.\n')
+    #    f.write('Tracking uses straightened (deskewed) image coordinates.\n')
+    #    f.write('Reported shift is (center of image i - center of image i-1) x mm/px.\n')
+    #    f.write('Image 1 shift is set to zero as a baseline; failed adjacent images produce NaN.\n')
+    #    f.write(f'Frames: {len(layers)}; tracked: {len(good)}\n')
+    #    f.write('Filename numbering is sorted; missing captures may make layers nonconsecutive.\n')
+    #    f.write('\n' + '\n'.join(mean_lines) + '\n')
     print('Saved results to:',OUTPUT)
 
 

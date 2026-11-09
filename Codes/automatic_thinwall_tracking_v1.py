@@ -23,15 +23,15 @@ import matplotlib.pyplot as plt
 
 #ROOT = Path(__file__).resolve().parent
 ROOT = Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Test_01\processed")
-REFERENCE = Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Codes\Thin_wall_drift_tracking\Edge_tracking_output_0.8mm\reference_0.8mm.png")
-OUTPUT = Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Codes\Thin_wall_drift_tracking\Edge_tracking_output_0.8mm")
+REFERENCE = Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Codes\Thin_wall_drift_tracking\Edge_tracking_output_0.3mm\reference_0.3mm.png")
+OUTPUT = Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Codes\Thin_wall_drift_tracking\Edge_tracking_output_0.3mm")
 OUTPUT.mkdir(exist_ok=True)
 IMAGES= Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Test_01\processed")
 #OUTPUT.mkdir(exist_ok=True)
 #REFERENCE = ROOT / 'reference_0.4mm.png'
 #OUTPUT = ROOT / 'automatic_box_tracking_outputs_0.4mm'
 #OUTPUT.mkdir(exist_ok=True)
-NOMINAL_WIDTH_MM = 0.8
+NOMINAL_WIDTH_MM = 0.3
 NOMINAL_LENGTH_MM = 40.0
 EXPECTED_LAYER_COUNT = 40
 BLUR_KERNEL = 5
@@ -206,6 +206,93 @@ def chart(x,y,name,ylabel,reference=None):
     ax.grid(alpha=.3);fig.tight_layout();fig.savefig(OUTPUT/name,dpi=250);plt.close(fig)
 
 
+
+def save_mean_shift_summary(rows, total_frames, shift_key, definition):
+    """Summarize shifts, excluding the first frame's artificial zero baseline.
+
+    Includes all finite shifts and separately the automatically accepted ('OK')
+    shifts, so suspicious results cannot silently influence the validated mean.
+    """
+    transition_count = max(total_frames - 1, 0)
+    data = []
+    accepted = []
+    for row in rows:
+        if row.get('layer', 0) <= 1:
+            continue
+        value = row.get(shift_key, float('nan'))
+        try:
+            value = float(value)
+        except (ValueError, TypeError):
+            continue
+        if not np.isfinite(value):
+            continue
+        data.append(value)
+        if row.get('status') == 'OK':
+            accepted.append(value)
+
+    def stats(values):
+        values = np.asarray(values, dtype=float)
+        if values.size == 0:
+            return float('nan'), float('nan')
+        return float(np.mean(values)), float(np.mean(np.abs(values)))
+
+    raw_signed, raw_absolute = stats(data)
+    accepted_signed, accepted_absolute = stats(accepted)
+
+    text_lines = [
+        'Mean wall shift across the image sequence',
+        f'Shift definition: {definition}',
+        f'Images processed: {total_frames}',
+        f'Possible consecutive transitions: {transition_count}',
+        'First image excluded: it has no preceding image (zero is only a plotting baseline).',
+        f'Finite shift measurements: {len(data)}',
+        f'Automatically accepted (status OK): {len(accepted)}',
+        f'Mean signed shift (mm): {raw_signed:+.8f}',
+        f'Mean absolute shift (mm): {raw_absolute:.8f}',
+       #f'Mean signed shift, accepted only (mm): {accepted_signed:+.8f}',
+        #f'Mean absolute shift, accepted only (mm): {accepted_absolute:.8f}',
+        'Signed means can cancel positive and negative shifts.',
+        'Absolute means measure average shift magnitude, regardless of direction.',
+        'Review status is an automatic flag, not independent physical validation.',
+    ]
+    (OUTPUT / 'mean_shift_summary.txt').write_text('\n'.join(text_lines) + '\n', encoding='utf-8')
+
+    records = [
+        ('all_finite', len(data), raw_signed, raw_absolute),
+        ('automatically_accepted', len(accepted), accepted_signed, accepted_absolute),
+    ]
+    with (OUTPUT / 'mean_shift_summary.csv').open('w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(['category', 'number_of_shifts', 'possible_shifts',
+                         'mean_signed_shift_mm', 'mean_absolute_shift_mm', 'definition'])
+        for label, count, mean_signed, mean_abs in records:
+            writer.writerow([label, count, transition_count, mean_signed, mean_abs, definition])
+
+    fig, ax = plt.subplots(figsize=(8.5, 5.0))
+    x = np.arange(2)
+    width = 0.35
+    a = [raw_signed, accepted_signed]
+    b = [raw_absolute, accepted_absolute]
+    ax.bar(x - width/2, a, width, label='Mean signed shift')
+    ax.bar(x + width/2, b, width, label='Mean absolute shift')
+    ax.axhline(0, color='gray', lw=0.9)
+    ax.set_xticks(x, [f'All finite\n(n={len(data)})',
+                      f'Automatically accepted\n(n={len(accepted)})'])
+    ax.set_ylabel('Average shift (mm)')
+    ax.set_title(f'Mean wall shift across {total_frames} frames\n{definition}')
+    ax.legend()
+    ax.grid(axis='y', alpha=0.25)
+    fig.tight_layout()
+    fig.savefig(OUTPUT / 'mean_shift_summary.png', dpi=250)
+    plt.close(fig)
+
+    print(f'\nMean-shift summary ({definition}; {total_frames} frames):')
+    print(f'  All finite: n={len(data)}/{transition_count}; '
+          f'signed={raw_signed:+.6f} mm; absolute={raw_absolute:.6f} mm')
+    print(f'  Automatically accepted: n={len(accepted)}/{transition_count}; '
+          f'signed={accepted_signed:+.6f} mm; absolute={accepted_absolute:.6f} mm')
+    return text_lines
+
 def main():
     layers=discover_layers()
     print(f'Found {len(layers)} layers: {layers[0].name} through {layers[-1].name}')
@@ -235,7 +322,7 @@ def main():
         fixed_width=geom['width_px']
         # Original image overlay with slanted (not vertical) reference-sized box.
         original=plot_slanted_box(bgr.copy(),c,fixed_width,y0,y1,geom,f'Layer {i} ({p.stem})')
-        cv2.imwrite(str(OUTPUT/f'{p.stem}_layer{i:02d}_boxed_full.png'),original)
+        #cv2.imwrite(str(OUTPUT/f'{p.stem}_layer{i:02d}_boxed_full.png'),original)
         # Cropping from deskewed image for easy visual comparison.
         straight=deskew(bgr,geom)
         xa=max(0,int(c-fixed_width/2-35));xb=min(straight.shape[1],int(c+fixed_width/2+36))
@@ -243,7 +330,7 @@ def main():
         straight_box=straight.copy()
         cv2.rectangle(straight_box,(int(c-fixed_width/2),y0),(int(c+fixed_width/2),y1),(255,0,0),2)
         crop=straight_box[ya:yb,xa:xb]
-        cv2.imwrite(str(OUTPUT/f'{p.stem}_layer{i:02d}_boxed_crop.png'),crop)
+        #cv2.imwrite(str(OUTPUT/f'{p.stem}_layer{i:02d}_boxed_crop.png'),crop)
         crops.append(crop);titles.append(f'Layer {i}\n{p.stem}')
         if len(crops)==PANEL_SIZE:
             save_panel(crops,titles,OUTPUT/f'boxed_panel_layers_{i-PANEL_SIZE+1:02d}_to_{i:02d}.png')
@@ -271,6 +358,8 @@ def main():
         chart(ix,[r['shift_from_layer1_mm'] for r in good],'shift_vs_layer_mm.png','Shift from first successfully tracked layer (mm)',0)
         chart(ix,[r['shift_from_layer1_px'] for r in good],'shift_vs_layer_px.png','Shift from first successfully tracked layer (pixels)',0)
         chart(ix,[r['detected_width_mm'] for r in good],'detected_width_vs_layer_mm.png','Detected wall width (mm)',NOMINAL_WIDTH_MM)
+    mean_lines = save_mean_shift_summary(rows, len(layers), 'shift_from_layer1_mm',
+                                         'Displacement relative to the first successfully tracked frame')
     with (OUTPUT/'automatic_tracking_summary.txt').open('w',encoding='utf8') as f:
         f.write(f'Nominal wall width {NOMINAL_WIDTH_MM} mm; nominal wall length {NOMINAL_LENGTH_MM} mm\n')
         f.write(f'Blue line slope dx/dy: {geom["slope"]:.6f}; gap: {geom["width_px"]:.3f} px\n')
@@ -279,6 +368,7 @@ def main():
         f.write('Tracking uses straightened (deskewed) image coordinates.\n')
         f.write(f'Frames: {len(layers)}; tracked: {len(good)}\n')
         f.write('Filename numbering is sorted; missing captures may make layers nonconsecutive.\n')
+        f.write('\n' + '\n'.join(mean_lines) + '\n')
     print('Saved results to:',OUTPUT)
 
 
