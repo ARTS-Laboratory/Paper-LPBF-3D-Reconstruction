@@ -1,0 +1,6 @@
+Exported CAD B-rep solid: valid=True, solids=1, faces=6, volume=33.175637 mm^3, height=1.2000 mm, length=40.0000 mm, width envelope=1.1171 mm
+Nominal width used only as approximate x calibration from blue guides.
+V2 current-vs-previous-layer tracking and width/gradient penalties retained.
+The layer-averaged measured edges are identical to global V2 edges.
+Smooth spline loft exported as one CAD STEP B-rep (no STL).
+No stationary-background registration: camera motion can imitate wall drift.
