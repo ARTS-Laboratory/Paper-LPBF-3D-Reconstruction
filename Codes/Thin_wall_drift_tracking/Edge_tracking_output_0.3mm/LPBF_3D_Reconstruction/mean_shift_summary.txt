@@ -5,8 +5,8 @@ Possible consecutive transitions: 39
 First image excluded: it has no preceding image (zero is only a plotting baseline).
 Finite shift measurements: 39
 Automatically accepted (status OK): 39
-Mean signed shift (mm): +0.00036630
-Mean absolute shift (mm): 0.02673993
+Mean signed shift (mm): +0.00091575
+Mean absolute shift (mm): 0.02527473
 Signed means can cancel positive and negative shifts.
 Absolute means measure average shift magnitude, regardless of direction.
 Review status is an automatic flag, not independent physical validation.

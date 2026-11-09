@@ -35,7 +35,7 @@ PROFILE_SIGMA = 2.0
 TRIM_TOP = 15
 TRIM_BOTTOM = 15
 EDGE_SEARCH_PX = 16       # expand cautiously if large drift, not to next wall
-WIDTH_TOLERANCE_PX = 12  # reference appears about 11-13 pixels wide
+WIDTH_TOLERANCE_PX = 10  # adjust the search window if code is not finding the edges
 MAX_CENTER_STEP_PX = 12 # flag, not a physical limit
 PANEL_SIZE = 8
 
