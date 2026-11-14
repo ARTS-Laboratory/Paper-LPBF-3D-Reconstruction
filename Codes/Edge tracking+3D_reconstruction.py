@@ -18,16 +18,19 @@ import matplotlib.pyplot as plt
 
 #ROOT = Path(__file__).resolve().parent
 ROOT = Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Test_01\processed")
-REFERENCE = Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Codes\Thin_wall_drift_tracking\Edge_tracking_output_0.9mm\reference_0.9mm.png")
-#OUTPUT = Path.home() / "LPBF_Tracking_3D" / "Edge_tracking_output_0.2mm"  # avoid OneDrive plot-save errors
-OUTPUT = Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Codes\Thin_wall_drift_tracking\Edge_tracking_output_0.9mm\LPBF_3D_Reconstruction")
+
+# change the reference image according to the test case (0.2, 0.4, 0.6, 0.9)
+REFERENCE = Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Codes\Thin_wall_drift_tracking\Edge_tracking_output_0.9mm\reference_0.9mm.png") 
+
+# change the output folder according to the test case (0.2, 0.4, 0.6, 0.9)
+OUTPUT = Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Codes\Thin_wall_drift_tracking\Edge_tracking_output_0.9mm\LPBF_3D_Reconstruction") 
 OUTPUT.mkdir(parents=True, exist_ok=True)
+
+# test images folder path
 IMAGES= Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Test_01\processed")
-#OUTPUT.mkdir(exist_ok=True)
-#REFERENCE = ROOT / 'reference_0.4mm.png'
-#OUTPUT = ROOT / 'automatic_box_tracking_outputs_0.4mm'
-#OUTPUT.mkdir(exist_ok=True)
-NOMINAL_WIDTH_MM = 0.9
+
+# change the width according to the test case (0.2, 0.4, 0.6, 0.9)
+NOMINAL_WIDTH_MM = 0.9  
 NOMINAL_LENGTH_MM = 40.0
 EXPECTED_LAYER_COUNT = 40
 BLUR_KERNEL = 5
