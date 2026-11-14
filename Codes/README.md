@@ -1,4 +1,3 @@
 # This folder contains the codes used in post processing of the layerwise images.
 
-automatic_thinwall_tracking_v1.py: Original verion used in QNDE paper for wall edge drift prediction
-automatic_thinwall_tracking_v1.py: Updated the logic to calculate the shift or drift of the printed wall relative to immediate previous layer as the goal is to track layer to layer changes.
+Edge tracking+3D_reconstruction.py : This file can check for layerwise changes in the thin wall printing and plot shift per layer. Also it created 3D step file from the tracked layer.
