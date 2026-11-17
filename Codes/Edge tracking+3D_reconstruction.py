@@ -18,30 +18,30 @@ import matplotlib.pyplot as plt
 
 
 # change the width according to the test case (0.2, 0.4, 0.6, 0.9)
-NOMINAL_WIDTH_MM = 1  
+NOMINAL_WIDTH_MM = 1
 NOMINAL_LENGTH_MM = 40.0
 EXPECTED_LAYER_COUNT = 40
 BLUR_KERNEL = 5
 PROFILE_SIGMA = 2.0
 TRIM_TOP = 15
 TRIM_BOTTOM = 15
-EDGE_SEARCH_PX = 12       # expand cautiously if large drift, not to next wall
-WIDTH_TOLERANCE_PX = 7  # adjust the search window if code is not finding the edges( in test_1: only for layer 3 the tolerence was kept at 10)
+EDGE_SEARCH_PX = 15   # expand cautiously if large drift, not to next wall
+WIDTH_TOLERANCE_PX = 10 # adjust the search window if code is not finding the edges
 MAX_CENTER_STEP_PX = 12 # flag, not a physical limit
 PANEL_SIZE = 8
 
 #ROOT = Path(__file__).resolve().parent
-ROOT = Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Test_01\processed")
+ROOT = Path(r"C:\Paper-LPBF-3D-Reconstruction\Test_01\processed")
 
 # change the reference image according to the test case (0.2, 0.4, 0.6, 0.9)
-REFERENCE = Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Codes\Thin_wall_drift_tracking\Edge_tracking_output_1mm\reference_1mm.png") 
+REFERENCE = Path(r"C:\Paper-LPBF-3D-Reconstruction\Codes\Thin_wall_drift_tracking\Edge_tracking_output_1mm\reference_1mm.png") 
 
 # change the output folder according to the test case (0.2, 0.4, 0.6, 0.9)
-OUTPUT = Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Codes\Thin_wall_drift_tracking\Edge_tracking_output_1mm\LPBF_3D_Reconstruction") 
+OUTPUT = Path(r"C:\Paper-LPBF-3D-Reconstruction\Codes\Thin_wall_drift_tracking\Edge_tracking_output_1mm\LPBF_3D_Reconstruction") 
 OUTPUT.mkdir(parents=True, exist_ok=True)
 
 # test images folder path
-IMAGES= Path(r"C:\Users\killedar\OneDrive - University of South Carolina\GitHub\Paper-LPBF-3D-Reconstruction\Test_01\processed")
+IMAGES= Path(r"C:\Paper-LPBF-3D-Reconstruction\Test_01\processed")
 
 
 def discover_layers():
